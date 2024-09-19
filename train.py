@@ -89,10 +89,20 @@ def train(source_imgs, save_path, EPOCHES_set, BATCH_SIZE, logging_period=1, ima
             G_loss_GAN_D2 = -tf.reduce_mean(tf.math.log(D2_fake + eps))
             G_loss_GAN = G_loss_GAN_D1 + G_loss_GAN_D2
 
+            # Debug: Print individual loss components
+            tf.print("G_loss_GAN_D1:", G_loss_GAN_D1, "G_loss_GAN_D2:", G_loss_GAN_D2)
+
             LOSS_IR = Fro_LOSS(diff)
             LOSS_VIS = L1_LOSS(compute_gradient(generated_img) - grad_of_vis)
+
+            # Debug: Print norm loss components
+            tf.print("LOSS_IR:", LOSS_IR, "LOSS_VIS:", LOSS_VIS)
+
             G_loss_norm = LOSS_IR + 1.2 * LOSS_VIS
             G_loss = G_loss_GAN + 0.8 * G_loss_norm
+
+        # Ensure the G_loss isn't zero before applying gradients
+        tf.print("Final G_loss:", G_loss)
 
         gradients = tape.gradient(G_loss, G.trainable_variables)
         clipped_gradients = [tf.clip_by_value(grad, -8, 8) for grad in gradients]
