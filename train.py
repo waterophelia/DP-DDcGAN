@@ -11,6 +11,8 @@ from Discriminator import Discriminator1, Discriminator2
 from LOSS import SSIM_LOSS, L1_LOSS, Fro_LOSS, _tf_fspecial_gauss
 from generate import generate
 
+tf.config.run_functions_eagerly(True)
+
 patch_size = 84
 LEARNING_RATE = 0.0002
 DECAY_RATE = 0.9
@@ -58,9 +60,6 @@ def train(source_imgs, save_path, EPOCHES_set, BATCH_SIZE, logging_period=1, ima
                                      D1_solver=D1_solver, D2_solver=D2_solver, current_iter=current_iter)
     manager = tf.train.CheckpointManager(checkpoint, save_path, max_to_keep=500)
 
-    # Set up summary writer
-    summary_writer = tf.summary.create_file_writer("logs/")
-
     def save_generated_image(image, epoch, batch, save_path):
       os.makedirs(save_path, exist_ok=True)  # Ensure directory exists
       image = tf.squeeze(image, axis=-1)  # Remove the last channel if it's 1
@@ -74,21 +73,13 @@ def train(source_imgs, save_path, EPOCHES_set, BATCH_SIZE, logging_period=1, ima
     def train_G(VIS_batch, ir_batch):
         with tf.GradientTape() as tape:
             generated_img = G(vis=VIS_batch, ir=ir_batch)
-            #tf.print("Generated image shape in train_G:", tf.shape(generated_img))
-
             g0 = tf.nn.avg_pool(generated_img, ksize=[1, 3, 3, 1], strides=[1, 2, 2, 1], padding='SAME')
             generated_img_ds = tf.nn.avg_pool(g0, ksize=[1, 3, 3, 1], strides=[1, 2, 2, 1], padding='SAME')
             
             # Downsample ir_batch to match the dimensions of generated_img_ds
             ir_batch_ds = tf.nn.avg_pool(ir_batch, ksize=[1, 4, 4, 1], strides=[1, 4, 4, 1], padding='SAME')
-            #tf.print("Downsampled IR_batch shape:", tf.shape(ir_batch_ds))
-            #tf.print("Generated image downsampled shape:", tf.shape(generated_img_ds))
-
             # Compute difference and inspect
             diff = generated_img_ds - ir_batch_ds
-            #tf.print("Difference shape:", tf.shape(diff))
-            #tf.print("Difference values range:", tf.reduce_min(diff), tf.reduce_max(diff))
-
             grad_of_vis = compute_gradient(VIS_batch)  # Using the grad function defined above
             
             D1_fake = D1(generated_img, training=True)
@@ -98,18 +89,12 @@ def train(source_imgs, save_path, EPOCHES_set, BATCH_SIZE, logging_period=1, ima
             G_loss_GAN_D2 = -tf.reduce_mean(tf.math.log(D2_fake + eps))
             G_loss_GAN = G_loss_GAN_D1 + G_loss_GAN_D2
 
-            # Use the downsampled ir_batch_ds for LOSS_IR calculation
             LOSS_IR = Fro_LOSS(diff)
             LOSS_VIS = L1_LOSS(compute_gradient(generated_img) - grad_of_vis)
             G_loss_norm = LOSS_IR + 1.2 * LOSS_VIS
             G_loss = G_loss_GAN + 0.8 * G_loss_norm
 
         gradients = tape.gradient(G_loss, G.trainable_variables)
-
-        # Debug gradients
-        all_grads = tf.concat([tf.reshape(g, [-1]) for g in gradients], axis=0)
-        #tf.print("Overall gradients - min:", tf.reduce_min(all_grads), "max:", tf.reduce_max(all_grads), "mean:", tf.reduce_mean(all_grads))
-
         clipped_gradients = [tf.clip_by_value(grad, -8, 8) for grad in gradients]
         G_solver.apply_gradients(zip(clipped_gradients, G.trainable_variables))
         
@@ -118,11 +103,8 @@ def train(source_imgs, save_path, EPOCHES_set, BATCH_SIZE, logging_period=1, ima
     @tf.function
     def train_D1(VIS_batch, ir_batch):
         with tf.GradientTape() as tape:
-            # Generate images
             generated_img = G(vis=VIS_batch, ir=ir_batch)
-            #print(f"Generated image shape in train_D1: {generated_img.shape}")  # Debug
-            #print(f"VIS_batch shape in train_D1: {VIS_batch.shape}")  # Debug
-            
+
             # Pass through the discriminator
             D1_real = D1(VIS_batch, training=True)
             D1_fake = D1(generated_img, training=True)
@@ -140,22 +122,12 @@ def train(source_imgs, save_path, EPOCHES_set, BATCH_SIZE, logging_period=1, ima
     @tf.function
     def train_D2(VIS_batch, ir_batch):
         with tf.GradientTape() as tape:
-            # Generate images
             generated_img = G(vis=VIS_batch, ir=ir_batch)
-            #print(f"Generated image shape: {generated_img.shape}")
-
-            # Adjust downsampling to maintain output shape of 11x11 before flattening
             g0 = tf.nn.avg_pool(generated_img, ksize=[1, 4, 4, 1], strides=[1, 4, 4, 1], padding='SAME')
             generated_img_ds = g0  # Output shape should be [batch_size, 21, 21, channels]
                 
-            #print(f"Generated image downsampled shape in train_D2: {generated_img_ds.shape}")  # Debug
-            #print(f"IR_batch shape in train_D2: {ir_batch.shape}")  # Debug
-
-            # Pass through the discriminator
             D2_real = D2(ir_batch, training=True)
-            #print(f"D2_real shape: {D2_real.shape}")
             D2_fake = D2(generated_img_ds, training=True)
-            #print(f"D2_fake shape: {D2_fake.shape}")
             
             D2_loss_real = -tf.reduce_mean(tf.math.log(D2_real + eps))
             D2_loss_fake = -tf.reduce_mean(tf.math.log(1. - D2_fake + eps))
@@ -206,9 +178,6 @@ def train(source_imgs, save_path, EPOCHES_set, BATCH_SIZE, logging_period=1, ima
           VIS_batch = np.array([ndimage.zoom(vis_patch, (patch_size / vis_patch.shape[0], patch_size / vis_patch.shape[1])) for vis_patch in VIS_batch])
           ir_batch = np.array([ndimage.zoom(ir_patch, (patch_size / ir_patch.shape[0], patch_size / ir_patch.shape[1])) for ir_patch in ir_or_batch])
 
-          #print(f"VIS_batch shape in main loop: {VIS_batch.shape}")  # Debug
-          #print(f"IR_batch shape in main loop: {ir_batch.shape}")  # Debug
-
           # Expand dimensions to match the expected input format for the model
           VIS_batch = np.expand_dims(VIS_batch, -1)
           ir_batch = np.expand_dims(ir_batch, -1)
@@ -255,21 +224,11 @@ def train(source_imgs, save_path, EPOCHES_set, BATCH_SIZE, logging_period=1, ima
                   g_loss, _, _, _, _, _ = train_G(VIS_batch, ir_batch)
                   it_g += 1
 
-          print("epoch: %d/%d, batch: %d\n" % (epoch+1, EPOCHS, batch))
-          if batch % 10 == 0:
+          if batch % 1 == 0:
                 elapsed_time = datetime.now() - start_time
                 lr = learning_rate(current_iter)
                 print(f"Epoch {epoch + 1}/{EPOCHS}, Batch {batch}/{n_batches}, G_loss: {g_loss}, D1_loss: {d1_loss}, D2_loss: {d2_loss}")
                 print(f"Learning Rate: {lr}, Elapsed Time: {elapsed_time}\n")
-
-          with summary_writer.as_default():
-                tf.summary.scalar('G_Loss_D1', g_loss_gan_d1, step=step)
-                tf.summary.scalar('G_Loss_D2', g_loss_gan_d2, step=step)
-                tf.summary.scalar('D1_real', tf.reduce_mean(d1_real), step=step)
-                tf.summary.scalar('D1_fake', tf.reduce_mean(d1_fake), step=step)
-                tf.summary.scalar('D2_real', tf.reduce_mean(d2_real), step=step)
-                tf.summary.scalar('D2_fake', tf.reduce_mean(d2_fake), step=step)
-                tf.summary.scalar('Learning rate', learning_rate(current_iter), step=step)
 
           if step % logging_period == 0:
                 manager.save()
@@ -281,5 +240,4 @@ def train(source_imgs, save_path, EPOCHES_set, BATCH_SIZE, logging_period=1, ima
                 print('epoch:%d/%d, step:%d, lr:%s, elapsed_time:%s' % (
                     epoch + 1, EPOCHS, step, lr, elapsed_time))
 
-    summary_writer.close()
     manager.save()
