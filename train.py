@@ -26,7 +26,9 @@ def compute_gradient(img):
     g = tf.nn.conv2d(img, kernel, strides=[1, 1, 1, 1], padding='SAME')
     return g
 
-def train(source_imgs, save_path, EPOCHES_set, BATCH_SIZE, logging_period=1, image_save_period=100, image_save_path='./generated_images'):
+#num_batches_to_run = 15  # Limit for this test
+
+def train(source_imgs, save_path, EPOCHES_set, BATCH_SIZE, logging_period=1, image_save_period=2, image_save_path='./generated_images'):
     start_time = datetime.now()
     EPOCHS = EPOCHES_set
     print('Epochs: %d, Batch size: %d' % (EPOCHS, BATCH_SIZE))
@@ -68,7 +70,8 @@ def train(source_imgs, save_path, EPOCHES_set, BATCH_SIZE, logging_period=1, ima
       plt.axis('off')
       plt.savefig(os.path.join(save_path, f'epoch_{epoch}_batch_{batch}.png'))
       plt.close()
-
+      print(f"Image saved for epoch {epoch}, batch {batch}")  # <-- Add this
+    
     @tf.function
     def train_G(VIS_batch, ir_batch):
         with tf.GradientTape() as tape:
@@ -180,6 +183,9 @@ def train(source_imgs, save_path, EPOCHES_set, BATCH_SIZE, logging_period=1, ima
           step += 1
           current_iter.assign(step)
 
+          #if batch >= num_batches_to_run:  # Stop after 10 batches
+          #      break
+
           # Extract and resize the batch
           VIS_batch = source_imgs[batch * BATCH_SIZE:(batch * BATCH_SIZE + BATCH_SIZE), :, :, 0]
           ir_or_batch = source_imgs[batch * BATCH_SIZE:(batch * BATCH_SIZE + BATCH_SIZE), :, :, 1]
@@ -201,22 +207,23 @@ def train(source_imgs, save_path, EPOCHES_set, BATCH_SIZE, logging_period=1, ima
           it_d2 = 0
 
           if batch % 2 == 0:
-                d1_loss, d1_real, d1_fake = train_D1(VIS_batch, ir_batch)
-                it_d1 += 1
-                d2_loss, d2_real, d2_fake = train_D2(VIS_batch, ir_batch)
-                it_d2 += 1
-                g_loss = 0  # Placeholder value
-                g_loss_gan_d1 = 0  # Placeholder value
-                g_loss_gan_d2 = 0  # Placeholder value
+              d1_loss, d1_real, d1_fake = train_D1(VIS_batch, ir_batch)
+              it_d1 += 1
+              d2_loss, d2_real, d2_fake = train_D2(VIS_batch, ir_batch)
+              it_d2 += 1
+              g_loss = 0  # Placeholder value
+              g_loss_gan_d1 = 0  # Placeholder value
+              g_loss_gan_d2 = 0  # Placeholder value
           else:
               # Call train_G and get the generated image
               g_loss, g_loss_gan_d1, g_loss_gan_d2, d1_fake, d2_fake, generated_img = train_G(VIS_batch, ir_batch)
               it_g += 1
               d1_loss = d2_loss = 0  # Placeholder values
 
-              # Save the generated image periodically
+              # Save the generated image periodically inside the else block
               if batch % image_save_period == 0:
-                  save_generated_image(generated_img[0], epoch, batch, save_path)  # Save the first image in the batch
+                  print(f"Saving generated image for epoch {epoch}, batch {batch}")
+                  save_generated_image(generated_img[0], epoch, batch, save_path)
 
           if batch % 2 == 0:
               while d1_loss > 1.9 and it_d1 < 20:
@@ -239,7 +246,7 @@ def train(source_imgs, save_path, EPOCHES_set, BATCH_SIZE, logging_period=1, ima
                 lr = learning_rate(current_iter)
                 print(f"Epoch {epoch + 1}/{EPOCHS}, Batch {batch}/{n_batches}, G_loss: {g_loss}, D1_loss: {d1_loss}, D2_loss: {d2_loss}")
                 print(f"Learning Rate: {lr}, Elapsed Time: {elapsed_time}\n")
-
+          
           if step % logging_period == 0:
                 manager.save()
             
@@ -251,3 +258,4 @@ def train(source_imgs, save_path, EPOCHES_set, BATCH_SIZE, logging_period=1, ima
                     epoch + 1, EPOCHS, step, lr, elapsed_time))
 
     manager.save()
+print("Training completed.")
