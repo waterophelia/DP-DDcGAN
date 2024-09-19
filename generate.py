@@ -1,9 +1,7 @@
-# Use a trained DenseFuse Net to generate fused images
-
-import tensorflow as tf
 import numpy as np
-from imageio import imread, imsave  # Updated to use imageio as scipy.misc is deprecated
+from imageio import imwrite, imread  # Updated for correct saving
 from os.path import join
+import tensorflow as tf
 from Generator import Generator
 
 def generate(ir_path, vis_path, model_path, index, output_path=None):
@@ -25,7 +23,7 @@ def generate(ir_path, vis_path, model_path, index, output_path=None):
     @tf.function
     def run_model(SOURCE_VIS, SOURCE_ir):
         G = Generator('Generator')
-        output_image = G.transform(vis=SOURCE_VIS, ir=SOURCE_ir)
+        output_image = G(vis=SOURCE_VIS, ir=SOURCE_ir)
         return output_image
 
     # Create variables for input
@@ -44,5 +42,8 @@ def generate(ir_path, vis_path, model_path, index, output_path=None):
     output = output_image.numpy()
     output = output[0, :, :, 0]  # Remove batch and channel dimensions
 
-    # Save the output
-    imsave(join(output_path, f"{index}.bmp"), output)
+    # Convert the output to uint8 format for saving as BMP
+    output = (output * 255).astype(np.uint8)  # Scale to [0, 255] and cast to uint8
+
+    # Save the output as BMP
+    imwrite(join(output_path, f"{index}.bmp"), output)
