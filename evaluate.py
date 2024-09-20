@@ -9,43 +9,34 @@ from skimage.measure import shannon_entropy
 from skimage.transform import resize
 
 # Paths for results and test images
-results_dir = './generated_images/'  
-test_imgs_dir = './test_imgs/'  
+results_dir = './generated_images/'  # Path to your generated images (should be .bmp)
+test_imgs_dir = './test_imgs/'  # Path to your test visible and infrared images (should be .bmp)
 
-result_files = sorted([f for f in os.listdir(results_dir) if f.endswith('.bmp')])
-
-# Helper function for reading the images if needed
+# Helper function for reading images
 def load_image(image_path):
     img = cv2.imread(image_path, cv2.IMREAD_GRAYSCALE)
     return img / 255.0  # Normalize the image to [0, 1]
 
 # Metric Functions
-# 1. Entropy
 def entropy(img):
     return shannon_entropy(img)
 
-# 2. Mean Gradient
 def mean_gradient(img):
     gx, gy = np.gradient(img)
     return np.mean(np.sqrt(gx**2 + gy**2))
 
-# 3. Standard Deviation
 def std_deviation(img):
     return np.std(img)
 
-# 4. PSNR
 def calculate_psnr(img1, img2):
     return psnr(img1, img2, data_range=1)
-    
-# 5. SSIM
+
 def calculate_ssim(img1, img2):
     return ssim(img1, img2, data_range=1)
-    
-# 6. Correlation Coefficient
+
 def calculate_correlation_coefficient(img1, img2):
     return np.corrcoef(img1.flatten(), img2.flatten())[0, 1]
-    
-# 7. Spatial Frequency
+
 def calculate_spatial_frequency(image):
     dx = np.diff(image, axis=1)
     dy = np.diff(image, axis=0)
@@ -57,19 +48,19 @@ def evaluate_images(fused_img, vis_img, ir_img):
         "Entropy": entropy(fused_img),
         "Mean Gradient": mean_gradient(fused_img),
         "Standard Deviation": std_deviation(fused_img),
-        "Spatial Frequency": spatial_frequency(fused_img),
-        "SSIM with Visible": ssim_index(fused_img, vis_img),
-        "SSIM with Infrared": ssim_index(fused_img, ir_img),
-        "PSNR with Visible": psnr_value(fused_img, vis_img),
-        "PSNR with Infrared": psnr_value(fused_img, ir_img),
-        "Correlation Coefficient with Visible": correlation_coefficient(fused_img, vis_img),
-        "Correlation Coefficient with Infrared": correlation_coefficient(fused_img, ir_img)
+        "Spatial Frequency": calculate_spatial_frequency(fused_img),
+        "SSIM with Visible": calculate_ssim(fused_img, vis_img),
+        "SSIM with Infrared": calculate_ssim(fused_img, ir_img),
+        "PSNR with Visible": calculate_psnr(fused_img, vis_img),
+        "PSNR with Infrared": calculate_psnr(fused_img, ir_img),
+        "Correlation Coefficient with Visible": calculate_correlation_coefficient(fused_img, vis_img),
+        "Correlation Coefficient with Infrared": calculate_correlation_coefficient(fused_img, ir_img)
     }
     return metrics
 
 # Example of applying the metrics over multiple images
 def evaluate_dataset(results_dir, test_imgs_dir):
-    result_files = sorted([f for f in os.listdir(results_dir) if f.endswith('.png')])
+    result_files = sorted([f for f in os.listdir(results_dir) if f.endswith('.bmp')])  # Adjusted to .bmp
 
     metrics_summary = []
     inference_times = []
@@ -110,8 +101,8 @@ def evaluate_dataset(results_dir, test_imgs_dir):
 
 # Main function to evaluate the entire dataset
 if __name__ == "__main__":
-    results_dir = './generated_images/'
-    test_imgs_dir = './test_imgs/'
+    results_dir = './generated_images/'  # Make sure this directory contains your generated .bmp images
+    test_imgs_dir = './test_imgs/'  # Make sure this directory contains your visible and infrared .bmp images
 
     # Evaluate dataset
     metrics_summary, inference_times = evaluate_dataset(results_dir, test_imgs_dir)
