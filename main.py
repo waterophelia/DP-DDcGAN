@@ -12,9 +12,9 @@ import scipy.ndimage
 BATCH_SIZE = 24
 EPOCHS = 1
 LOGGING = 40
-MODEL_SAVE_PATH = '/content/drive/MyDrive/stormy/model/'  # Save path on Google Drive
-IMAGE_SAVE_PATH = '/content/drive/MyDrive/stormy/generated_images/'  # Path for saving images in Google Drive
-IS_TRAINING = False  # Set this to True for training and False for generating images
+MODEL_SAVE_PATH = './model/'
+IMAGE_SAVE_PATH = './generated_images/'  # New path for saving images
+IS_TRAINING = True
 
 def main():
     if IS_TRAINING:
@@ -31,18 +31,18 @@ def main():
 
     else:
         print('\nBegin to generate pictures ...\n')
-        path = './test_imgs/'  # Path where test IR and VIS images are stored
-        savepath = IMAGE_SAVE_PATH  # Path where generated images will be saved
+        path = './test_imgs/'
+        savepath = './generated_images/'
 
         # Generate pictures
         Time = []
-        for i in range(20):  # Assuming there are 20 image pairs to generate
+        for i in range(20):
             index = i + 1
             ir_path = os.path.join(path, f'IR{index}_ds.bmp')
             vis_path = os.path.join(path, f'VIS{index}.bmp')
 
             begin = time.time()
-            model_path = MODEL_SAVE_PATH + 'final_model.ckpt'  # Load the trained model
+            model_path = MODEL_SAVE_PATH + 'final_model.ckpt'
             generate(ir_path, vis_path, model_path, index, output_path=savepath)
             end = time.time()
 
