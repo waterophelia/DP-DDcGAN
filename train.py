@@ -25,9 +25,7 @@ def compute_gradient(img):
     kernel = tf.expand_dims(kernel, axis=-1)
     g = tf.nn.conv2d(img, kernel, strides=[1, 1, 1, 1], padding='SAME')
     return g
-
-#num_batches_to_run = 15  # Limit for this test
-
+    
 def train(source_imgs, save_path, EPOCHES_set, BATCH_SIZE, logging_period=1, image_save_period=2, image_save_path='./generated_images'):
     start_time = datetime.now()
     EPOCHS = EPOCHES_set
@@ -70,8 +68,7 @@ def train(source_imgs, save_path, EPOCHES_set, BATCH_SIZE, logging_period=1, ima
       plt.axis('off')
       plt.savefig(os.path.join(save_path, f'epoch_{epoch}_batch_{batch}.png'))
       plt.close()
-      print(f"Image saved for epoch {epoch}, batch {batch}")  # <-- Add this
-    
+
     @tf.function
     def train_G(VIS_batch, ir_batch):
         with tf.GradientTape() as tape:
@@ -92,16 +89,12 @@ def train(source_imgs, save_path, EPOCHES_set, BATCH_SIZE, logging_period=1, ima
             G_loss_GAN_D2 = -tf.reduce_mean(tf.math.log(D2_fake + eps))
             G_loss_GAN = G_loss_GAN_D1 + G_loss_GAN_D2
 
-            # Debug: Print individual loss components
-            tf.print("G_loss_GAN_D1:", G_loss_GAN_D1, "G_loss_GAN_D2:", G_loss_GAN_D2)
-
             LOSS_IR = Fro_LOSS(diff)
             LOSS_VIS = L1_LOSS(compute_gradient(generated_img) - grad_of_vis)
+            SSIM_loss_VIS = SSIM_LOSS(generated_img, VIS_batch)  # SSIM with visible image
+            SSIM_loss_IR = SSIM_LOSS(generated_img, ir_batch)    # SSIM with infrared image
 
-            # Debug: Print norm loss components
-            tf.print("LOSS_IR:", LOSS_IR, "LOSS_VIS:", LOSS_VIS)
-
-            G_loss_norm = LOSS_IR + 1.2 * LOSS_VIS
+            G_loss_norm = 0.5 * LOSS_IR + 0.5 * LOSS_VIS + 2.0 * (SSIM_loss_IR + SSIM_loss_VIS)
             G_loss = G_loss_GAN + 0.8 * G_loss_norm
 
         # Ensure the G_loss isn't zero before applying gradients
@@ -183,9 +176,6 @@ def train(source_imgs, save_path, EPOCHES_set, BATCH_SIZE, logging_period=1, ima
           step += 1
           current_iter.assign(step)
 
-          #if batch >= num_batches_to_run:  # Stop after 10 batches
-          #      break
-
           # Extract and resize the batch
           VIS_batch = source_imgs[batch * BATCH_SIZE:(batch * BATCH_SIZE + BATCH_SIZE), :, :, 0]
           ir_or_batch = source_imgs[batch * BATCH_SIZE:(batch * BATCH_SIZE + BATCH_SIZE), :, :, 1]
@@ -207,23 +197,22 @@ def train(source_imgs, save_path, EPOCHES_set, BATCH_SIZE, logging_period=1, ima
           it_d2 = 0
 
           if batch % 2 == 0:
-              d1_loss, d1_real, d1_fake = train_D1(VIS_batch, ir_batch)
-              it_d1 += 1
-              d2_loss, d2_real, d2_fake = train_D2(VIS_batch, ir_batch)
-              it_d2 += 1
-              g_loss = 0  # Placeholder value
-              g_loss_gan_d1 = 0  # Placeholder value
-              g_loss_gan_d2 = 0  # Placeholder value
+                d1_loss, d1_real, d1_fake = train_D1(VIS_batch, ir_batch)
+                it_d1 += 1
+                d2_loss, d2_real, d2_fake = train_D2(VIS_batch, ir_batch)
+                it_d2 += 1
+                g_loss = 0  # Placeholder value
+                g_loss_gan_d1 = 0  # Placeholder value
+                g_loss_gan_d2 = 0  # Placeholder value
           else:
               # Call train_G and get the generated image
               g_loss, g_loss_gan_d1, g_loss_gan_d2, d1_fake, d2_fake, generated_img = train_G(VIS_batch, ir_batch)
               it_g += 1
               d1_loss = d2_loss = 0  # Placeholder values
 
-              # Save the generated image periodically inside the else block
+              # Save the generated image periodically
               if batch % image_save_period == 0:
-                  print(f"Saving generated image for epoch {epoch}, batch {batch}")
-                  save_generated_image(generated_img[0], epoch, batch, save_path)
+                  save_generated_image(generated_img[0], epoch, batch, save_path)  # Save the first image in the batch
 
           if batch % 2 == 0:
               while d1_loss > 1.9 and it_d1 < 20:
@@ -246,7 +235,7 @@ def train(source_imgs, save_path, EPOCHES_set, BATCH_SIZE, logging_period=1, ima
                 lr = learning_rate(current_iter)
                 print(f"Epoch {epoch + 1}/{EPOCHS}, Batch {batch}/{n_batches}, G_loss: {g_loss}, D1_loss: {d1_loss}, D2_loss: {d2_loss}")
                 print(f"Learning Rate: {lr}, Elapsed Time: {elapsed_time}\n")
-          
+
           if step % logging_period == 0:
                 manager.save()
             
@@ -258,4 +247,4 @@ def train(source_imgs, save_path, EPOCHES_set, BATCH_SIZE, logging_period=1, ima
                     epoch + 1, EPOCHS, step, lr, elapsed_time))
 
     manager.save()
-print("Training completed.")
+print("Training completed for 10 batches.")
