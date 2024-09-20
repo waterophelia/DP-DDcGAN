@@ -97,9 +97,6 @@ def train(source_imgs, save_path, EPOCHES_set, BATCH_SIZE, logging_period=1, ima
             G_loss_norm = 0.5 * LOSS_IR + 0.5 * LOSS_VIS + 2.0 * (SSIM_loss_IR + SSIM_loss_VIS)
             G_loss = G_loss_GAN + 0.8 * G_loss_norm
 
-        # Ensure the G_loss isn't zero before applying gradients
-        tf.print("Final G_loss:", G_loss)
-
         gradients = tape.gradient(G_loss, G.trainable_variables)
         clipped_gradients = [tf.clip_by_value(grad, -8, 8) for grad in gradients]
         G_solver.apply_gradients(zip(clipped_gradients, G.trainable_variables))
