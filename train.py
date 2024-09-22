@@ -87,7 +87,7 @@ def train(source_imgs, save_path, EPOCHES_set, BATCH_SIZE, logging_period=1, ima
             
             G_loss_GAN_D1 = -tf.reduce_mean(tf.math.log(D1_fake + eps))
             G_loss_GAN_D2 = -tf.reduce_mean(tf.math.log(D2_fake + eps))
-            G_loss_GAN = G_loss_GAN_D1 + G_loss_GAN_D2
+            G_loss_GAN = 1.3 * G_loss_GAN_D1 + 0.7 * G_loss_GAN_D2
 
             LOSS_IR = Fro_LOSS(diff)
             LOSS_VIS = L1_LOSS(compute_gradient(generated_img) - grad_of_vis)
