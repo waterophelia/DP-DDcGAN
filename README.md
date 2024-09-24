@@ -36,3 +36,17 @@ Install the required libraries using `pip`:
 
 ```bash
 pip install tensorflow numpy h5py scipy matplotlib imageio opencv-python
+```
+
+## **Project Structure**
+
+├── Generator.py                # Generator model
+├── Discriminator.py             # Discriminator1 and Discriminator2 models
+├── LOSS.py                      # Loss functions (SSIM, L1, Frobenius)
+├── generate.py                  # Function for generating fused images
+├── train.py                     # Function for training the model
+├── Training_Dataset.h5          # Training dataset (not included)
+├── generated_images/            # Folder to save generated images
+├── model/                       # Folder to save model checkpoints
+├── README.md                    # Project documentation
+└── main.py                      # Main script to train or generate images
