@@ -120,7 +120,7 @@ def train(source_imgs, save_path, EPOCHES_set, BATCH_SIZE, logging_period=1, ima
         
         return G_loss, G_loss_GAN_D1, G_loss_GAN_D2, D1_fake, D2_fake, generated_img
 
-    # Training function for Discriminator1 (D1)
+    # Training function for Discriminator1 
     @tf.function
     def train_D1(VIS_batch, ir_batch):
         with tf.GradientTape() as tape:
@@ -129,31 +129,37 @@ def train(source_imgs, save_path, EPOCHES_set, BATCH_SIZE, logging_period=1, ima
             # Pass through the discriminator
             D1_real = D1(VIS_batch, training=True)
             D1_fake = D1(generated_img, training=True)
-            
+
+            # GAN loss for the discriminator
             D1_loss_real = -tf.reduce_mean(tf.math.log(D1_real + eps))
             D1_loss_fake = -tf.reduce_mean(tf.math.log(1. - D1_fake + eps))
             D1_loss = D1_loss_fake + D1_loss_real
 
+        # Compute and apply gradients
         gradients = tape.gradient(D1_loss, D1.trainable_variables)
         clipped_gradients = [tf.clip_by_value(grad, -8, 8) for grad in gradients]
         D1_solver.apply_gradients(zip(clipped_gradients, D1.trainable_variables))
         
         return D1_loss, D1_real, D1_fake
 
+    # Training function for Discriminator2 
     @tf.function
     def train_D2(VIS_batch, ir_batch):
         with tf.GradientTape() as tape:
             generated_img = G(vis=VIS_batch, ir=ir_batch)
             g0 = tf.nn.avg_pool(generated_img, ksize=[1, 4, 4, 1], strides=[1, 4, 4, 1], padding='SAME')
             generated_img_ds = g0  # Output shape should be [batch_size, 21, 21, channels]
-                
+
+            # Pass through the discriminator
             D2_real = D2(ir_batch, training=True)
             D2_fake = D2(generated_img_ds, training=True)
-            
+
+            # GAN loss for the discriminator
             D2_loss_real = -tf.reduce_mean(tf.math.log(D2_real + eps))
             D2_loss_fake = -tf.reduce_mean(tf.math.log(1. - D2_fake + eps))
             D2_loss = D2_loss_fake + D2_loss_real
 
+        # Compute and apply gradients
         gradients = tape.gradient(D2_loss, D2.trainable_variables)
         clipped_gradients = [tf.clip_by_value(grad, -8, 8) for grad in gradients]
         D2_solver.apply_gradients(zip(clipped_gradients, D2.trainable_variables))
