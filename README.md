@@ -3,16 +3,16 @@ This repository contains the code for the thesis ‘Fantastic Privacy Techniques
 
 This repository contains an implementation of the Dual-Discriminator Conditional Generative Adversarial Network (DDcGAN) using TensorFlow 2 and with added Differential Privacy Techniques. DDcGAN is a powerful framework for multi-modal image fusion, particularly suited for infrared-visible and MRI-PET image pairs. The generator combines visible and infrared images into a single fused image, while two discriminators (D1 and D2) ensure that the generated images resemble the original images.
 
-This implementation is based on the original [DDcGAN paper](https://ieeexplore.ieee.org/abstract/document/9031751).
-
-The following datasets are used in this project:
-- [Training_Dataset.h5](https://drive.google.com/file/d/1o-dhSphyyiqSHu9veiKWvxViZ_FSeZWJ/view?usp=share_link) - infrared and visible images from TNO Human Factors Dataset. 
-
 ## Features
 - Implemented in TensorFlow 2
 - Supports multi-resolution image fusion
 - Includes data preprocessing and augmentation
 - Provides evaluation metrics for generated images
+
+This implementation is based on the original [DDcGAN paper](https://ieeexplore.ieee.org/abstract/document/9031751).
+
+The following datasets are used in this project:
+- [Training_Dataset.h5](https://drive.google.com/file/d/1o-dhSphyyiqSHu9veiKWvxViZ_FSeZWJ/view?usp=share_link) - infrared and visible images from TNO Human Factors Dataset. 
 
 ## Installation
 
@@ -20,7 +20,7 @@ The following datasets are used in this project:
 git clone https://github.com/yourusername/ddcgan-vis-ir.git
 cd ddcgan-vis-ir
 ```
-## **Requirements**
+## Requirements
 
 To run this project, you need the following dependencies:
 
@@ -39,7 +39,7 @@ Install the required libraries using `pip`:
 pip install tensorflow numpy h5py scipy matplotlib imageio opencv-python
 ```
 
-# Base Model Usage
+## Base Model Usage
 To train the model with no privacy guarantees on your dataset, comment out noise_type and epsilon in main.py from both hyperparameters and the training loop, similarly delete it from train.py in def train, and in train.py get rid of applying the noise to both batches.
 Then, run the main.py script with the IS_TRAINING = True flag:
 ```
