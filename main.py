@@ -1,3 +1,7 @@
+# This code manages the training and generation of images using a pre-trained model. It can either train the model 
+# using a dataset or generate fused images from infrared and visible input images. It includes functionality for logging, 
+# saving model checkpoints, and saving generated images.
+
 from __future__ import print_function
 
 import time
@@ -9,17 +13,18 @@ from train import train
 from generate import generate
 import scipy.ndimage
 
+# Hyperparameters and settings
 BATCH_SIZE = 24
 EPOCHS = 1
 LOGGING = 40
-MODEL_SAVE_PATH = './model/'
-IMAGE_SAVE_PATH = './generated_images/'  # New path for saving images
-IS_TRAINING = True
+MODEL_SAVE_PATH = './model/' # Path where the trained model will be saved
+IMAGE_SAVE_PATH = './generated_images/' # Path where generated images will be saved
+IS_TRAINING = True # True for model training and False for generating
 
 def main():
     if IS_TRAINING:
         print('\nBegin to train the network ...\n')
-        os.makedirs(MODEL_SAVE_PATH, exist_ok=True)  # Ensure save path directory exists
+        os.makedirs(MODEL_SAVE_PATH, exist_ok=True)  # Ensure model save path directory exists
         os.makedirs(IMAGE_SAVE_PATH, exist_ok=True)  # Ensure image save path directory exists
 
         # Load training data
@@ -31,11 +36,10 @@ def main():
 
     else:
         print('\nBegin to generate pictures ...\n')
-        path = './test_imgs/'
+        path = './test_imgs/' # Directory containing test images
         savepath = './generated_images/'
 
-        # Generate pictures
-        Time = []
+        Time = [] # List to store the time taken for each generation step
         for i in range(20):
             index = i + 1
             ir_path = os.path.join(path, f'IR{index}_ds.bmp')
@@ -49,6 +53,7 @@ def main():
             Time.append(end - begin)
             print(f"pic_num: {index}")
 
+         # Calculate and print the average and standard deviation of generation times
         print(f"Time: mean: {np.mean(Time)}, std: {np.std(Time)}")
 
 if __name__ == '__main__':
