@@ -18,7 +18,11 @@ test_imgs_dir = './test_imgs/'  # Path to the original (test) visible and infrar
 # Helper function to load and normalize an image
 def load_image(image_path):
     img = cv2.imread(image_path, cv2.IMREAD_GRAYSCALE)
-    return img / 255.0  
+    return img / 255.0
+
+# Helper function for converting image back to uint8
+def im2uint8(image):
+    return (image * 255).astype(np.uint8)
 
 # Metric Functions
 
@@ -37,11 +41,15 @@ def std_deviation(img):
 
 # Calculate Peak Signal-to-Noise Ratio (PSNR) between two images
 def calculate_psnr(img1, img2):
-    return psnr(img1, img2, data_range=1)
+    img1_uint8 = im2uint8(img1)
+    img2_uint8 = im2uint8(img2)
+    return psnr(img1_uint8, img2_uint8, data_range=255)
 
 # Calculate Structural Similarity Index (SSIM) between two images
 def calculate_ssim(img1, img2):
-    return ssim(img1, img2, data_range=1)
+    img1_uint8 = im2uint8(img1)
+    img2_uint8 = im2uint8(img2)
+    return ssim(img1_uint8, img2_uint8, data_range=255)
 
 # Calculate the correlation coefficient between two images
 def calculate_correlation_coefficient(img1, img2):
