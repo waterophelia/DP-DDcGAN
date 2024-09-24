@@ -49,7 +49,7 @@ def main():
 
             begin = time.time()
             model_path = MODEL_SAVE_PATH + 'final_model.ckpt'
-            generate(ir_path, vis_path, model_path, index, output_path=savepath)
+            generate(ir_path, vis_path, model_path, index, noise_type, epsilon, output_path=savepath)
             end = time.time()
 
             Time.append(end - begin)
