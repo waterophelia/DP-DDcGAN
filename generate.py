@@ -69,7 +69,7 @@ def generate(ir_path, vis_path, model_path, index, noise_type, epsilon, output_p
     output = output[0, :, :, 0]  
 
     # Convert the output to uint8 format for saving as BMP
-    output = (output * 255).astype(np.uint8)  
+    output = (output * 255).astype(np.im2uint8)  
 
     # Save the output as BMP
     imwrite(join(output_path, f"{index}.bmp"), output)
