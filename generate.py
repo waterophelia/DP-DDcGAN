@@ -7,9 +7,6 @@ from os.path import join
 import tensorflow as tf
 from Generator import Generator
 
-noise_type = 'gaussian' # or 'laplace'
-epsilon = 1
-
 # Function to apply output noise to the generated images
 def apply_output_noise(generated_img, noise_type, epsilon, sensitivity=1):
     if noise_type == 'laplace':
