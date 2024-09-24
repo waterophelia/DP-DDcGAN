@@ -1,3 +1,6 @@
+# This code implements the training loop for the DDcGAN. It includes the Generator and two Discriminators, 
+# and trains them using various loss functions.
+
 import scipy.io as scio
 import numpy as np
 import tensorflow as tf
@@ -11,32 +14,37 @@ from Discriminator import Discriminator1, Discriminator2
 from LOSS import SSIM_LOSS, L1_LOSS, Fro_LOSS, _tf_fspecial_gauss
 from generate import generate
 
+# Enable eager execution to debug and profile code more easily
 tf.config.run_functions_eagerly(True)
 
+# Hyperparameters
 patch_size = 84
 LEARNING_RATE = 0.0002
 DECAY_RATE = 0.9
 eps = 1e-8
-rc = 4
+rc = 4 # Rescaling factor for some layers
 
+# Function to compute the gradient of the image using a custom kernel
 def compute_gradient(img):
     kernel = tf.constant([[1 / 8, 1 / 8, 1 / 8], [1 / 8, -1, 1 / 8], [1 / 8, 1 / 8, 1 / 8]])
     kernel = tf.expand_dims(kernel, axis=-1)
     kernel = tf.expand_dims(kernel, axis=-1)
     g = tf.nn.conv2d(img, kernel, strides=[1, 1, 1, 1], padding='SAME')
     return g
-    
+
+# Main training function
 def train(source_imgs, save_path, EPOCHES_set, BATCH_SIZE, logging_period=1, image_save_period=2, image_save_path='./generated_images'):
     start_time = datetime.now()
     EPOCHS = EPOCHES_set
     print('Epochs: %d, Batch size: %d' % (EPOCHS, BATCH_SIZE))
     
     checkpoint_save_path = save_path + 'temporary.ckpt'
-    num_imgs = source_imgs.shape[0]
-    mod = num_imgs % BATCH_SIZE
-    n_batches = int(num_imgs // BATCH_SIZE)
+    num_imgs = source_imgs.shape[0]  # Number of training images
+    mod = num_imgs % BATCH_SIZE  # Check if there is any leftover data that doesn't fit into a full batch
+    n_batches = int(num_imgs // BATCH_SIZE)  # Number of batches
     print('Train images number %d, Batches: %d.\n' % (num_imgs, n_batches))
 
+    # Trim the dataset if there are leftover images
     if mod > 0:
         print('Train set has been trimmed %d samples...\n' % mod)
         source_imgs = source_imgs[:-mod]
@@ -47,9 +55,11 @@ def train(source_imgs, save_path, EPOCHES_set, BATCH_SIZE, logging_period=1, ima
     D2 = Discriminator2('Discriminator2')
 
     current_iter = tf.Variable(0, trainable=False)
+    # Learning rate schedule with exponential decay
     learning_rate = tf.keras.optimizers.schedules.ExponentialDecay(
         LEARNING_RATE, decay_steps=int(n_batches), decay_rate=DECAY_RATE, staircase=False)
 
+    # Optimizers
     G_GAN_solver = tf.keras.optimizers.RMSprop(learning_rate)
     G_solver = tf.keras.optimizers.RMSprop(learning_rate)
     D1_solver = tf.keras.optimizers.SGD(learning_rate)
@@ -60,6 +70,7 @@ def train(source_imgs, save_path, EPOCHES_set, BATCH_SIZE, logging_period=1, ima
                                      D1_solver=D1_solver, D2_solver=D2_solver, current_iter=current_iter)
     manager = tf.train.CheckpointManager(checkpoint, save_path, max_to_keep=500)
 
+    # Function to save generated images during training
     def save_generated_image(image, epoch, batch, save_path):
       os.makedirs(save_path, exist_ok=True)  # Ensure directory exists
       image = tf.squeeze(image, axis=-1)  # Remove the last channel if it's 1
@@ -69,6 +80,7 @@ def train(source_imgs, save_path, EPOCHES_set, BATCH_SIZE, logging_period=1, ima
       plt.savefig(os.path.join(save_path, f'epoch_{epoch}_batch_{batch}.png'))
       plt.close()
 
+    # Training function for the Generator
     @tf.function
     def train_G(VIS_batch, ir_batch):
         with tf.GradientTape() as tape:
@@ -81,28 +93,34 @@ def train(source_imgs, save_path, EPOCHES_set, BATCH_SIZE, logging_period=1, ima
             # Compute difference and inspect
             diff = generated_img_ds - ir_batch_ds
             grad_of_vis = compute_gradient(VIS_batch)  # Using the grad function defined above
-            
+
+            # Discriminator outputs for the generated image
             D1_fake = D1(generated_img, training=True)
             D2_fake = D2(generated_img_ds, training=True)
-            
+
+            # GAN loss for the generator
             G_loss_GAN_D1 = -tf.reduce_mean(tf.math.log(D1_fake + eps))
             G_loss_GAN_D2 = -tf.reduce_mean(tf.math.log(D2_fake + eps))
             G_loss_GAN = 1.3 * G_loss_GAN_D1 + 0.7 * G_loss_GAN_D2
 
+            # Additional losses for the generator 
             LOSS_IR = Fro_LOSS(diff)
             LOSS_VIS = L1_LOSS(compute_gradient(generated_img) - grad_of_vis)
             SSIM_loss_VIS = SSIM_LOSS(generated_img, VIS_batch)  # SSIM with visible image
             SSIM_loss_IR = SSIM_LOSS(generated_img, ir_batch)    # SSIM with infrared image
 
+            # Weighted sum of losses
             G_loss_norm = 0.5 * LOSS_IR + 0.5 * LOSS_VIS + 2.0 * (SSIM_loss_IR + SSIM_loss_VIS)
             G_loss = G_loss_GAN + 0.8 * G_loss_norm
 
+        # Compute and apply gradients
         gradients = tape.gradient(G_loss, G.trainable_variables)
         clipped_gradients = [tf.clip_by_value(grad, -8, 8) for grad in gradients]
         G_solver.apply_gradients(zip(clipped_gradients, G.trainable_variables))
         
         return G_loss, G_loss_GAN_D1, G_loss_GAN_D2, D1_fake, D2_fake, generated_img
 
+    # Training function for Discriminator1 (D1)
     @tf.function
     def train_D1(VIS_batch, ir_batch):
         with tf.GradientTape() as tape:
