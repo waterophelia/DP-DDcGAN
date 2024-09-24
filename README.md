@@ -40,7 +40,7 @@ pip install tensorflow numpy h5py scipy matplotlib imageio opencv-python
 ```
 
 ## Base Model Usage
-To train the model with no privacy guarantees on your dataset, comment out noise_type and epsilon in main.py from both hyperparameters and the training loop, similarly delete it from train.py in def train, and in train.py get rid of applying the noise to both batches.
+To train the model without privacy guarantees on your dataset, comment out noise_type and epsilon in main.py from both hyperparameters and the training loop, similarly delete it from train.py in def train and from generate.py in def generate, and in train.py get rid of applying the noise to both batches; similarly, in generate.py get rid of applying noisy outputs.
 Then, run the main.py script with the IS_TRAINING = True flag:
 ```
 python main.py
@@ -55,13 +55,29 @@ python main.py
 This will load the pre-trained model checkpoints from the ./model/ directory and generate fused images for the test set (e.g., VIS.bmp and IR.bmp images) located in the ./test_imgs/ directory.
 If you want to change the number of generated images or paths for the input images, modify the main.py script
 
-# Data Privacy
+# Differential Privacy Techniques
 Three main techniques for achieving data privacy have been implemented in this project: input perturbation, intermediate perturbation, and output perturbation.
 
 ## Input Perturbation
-To train the model with input perturbation on your dataset, run the main_input.py script with the IS_TRAINING = True flag:
+To train the model with input perturbation on your dataset, run the main_input.py script with:
+1. noise_type: Set to 'gaussian' or 'laplace' depending on the type of noise you want.
+2. epsilon: Set the privacy guarantee for the input data.
 ```
 python main_input.py
 ```
-You can change noise type ('gaussian' or 'laplace') and epsilon (privacy guarantee) value.
+
+## Output Perturbation
+To enable output perturbation, adjust the following parameters in main.py:
+1. noise_type: Set to 'gaussian' or 'laplace' depending on the type of noise you want.
+2. epsilon: Set the privacy guarantee, where lower values provide stronger privacy.
+```
+python main_input.py
+```
+
+## Evaluation
+Once you’ve trained the model or generated images with differential privacy, you can evaluate the results using the provided evaluation metrics (e.g., SSIM, PSNR, correlation coefficient). These metrics can be adjusted inside the evaluation script.
+```
+python evaluate.py
+```
+
 
