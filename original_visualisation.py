@@ -1,4 +1,4 @@
-# This code visualises the visible and infrared images alo with their downscaled and upscaled versions
+# This code visualises the visible and infrared images along with their downscaled and upscaled versions
 
 import numpy as np
 import matplotlib.pyplot as plt
