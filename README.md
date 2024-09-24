@@ -1,4 +1,4 @@
-# DDcGAN in TensorFlow 2
+# DDcGAN for infrared and visible image fusion in TensorFlow 2
 
 This repository contains an implementation of the Dual-Discriminator Conditional Generative Adversarial Network (DDcGAN) using TensorFlow 2. DDcGAN is a powerful framework for multi-modal image fusion, particularly suited for infrared-visible and MRI-PET image pairs.
 
