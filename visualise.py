@@ -1,3 +1,6 @@
+# This code loads and visualizes a few random samples (visible and infrared images) from a dataset stored in an HDF5 file.
+# The selected samples are displayed and saved as an image file for easy inspection.
+
 import numpy as np
 import matplotlib.pyplot as plt
 import h5py
