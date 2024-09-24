@@ -1,3 +1,6 @@
+# This code implements a generator network for image translation using visible and infrared images. 
+# It includes an encoder-decoder architecture and custom deconvolution layers.
+
 import tensorflow as tf
 from Deconv import DeconvLayer
 
