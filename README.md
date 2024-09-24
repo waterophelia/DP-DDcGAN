@@ -1,4 +1,5 @@
 # DDcGAN for infrared and visible image fusion in TensorFlow 2
+This repository contains the code for the thesis ‘Fantastic Privacy Techniques and How to Implement Them: Navigating Differential Privacy in Multi-Modal Generative Models for Clinical Data.’ 
 
 This repository contains an implementation of the Dual-Discriminator Conditional Generative Adversarial Network (DDcGAN) using TensorFlow 2. DDcGAN is a powerful framework for multi-modal image fusion, particularly suited for infrared-visible and MRI-PET image pairs. The generator combines visible and infrared images into a single fused image, while two discriminators (D1 and D2) ensure that the generated images resemble the original images.
 
