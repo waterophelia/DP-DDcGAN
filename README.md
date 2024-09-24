@@ -16,7 +16,23 @@ The following datasets are used in this project:
 ## Installation
 
 ```
-git clone https://github.com/yourusername/ddcgan-tensorflow2.git
-cd ddcgan-tensorflow2
-pip install -r requirements.txt
+git clone https://github.com/yourusername/ddcgan-vis-ir.git
+cd ddcgan-vis-ir
 ```
+## **Requirements**
+
+To run this project, you need the following dependencies:
+
+- Python 3.x
+- TensorFlow 2.x
+- NumPy
+- h5py
+- SciPy
+- Matplotlib
+- Imageio
+- OpenCV
+
+Install the required libraries using `pip`:
+
+```bash
+pip install tensorflow numpy h5py scipy matplotlib imageio opencv-python
