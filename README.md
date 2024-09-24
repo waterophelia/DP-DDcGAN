@@ -38,15 +38,18 @@ Install the required libraries using `pip`:
 pip install tensorflow numpy h5py scipy matplotlib imageio opencv-python
 ```
 
-## **Project Structure**
+# Usage
+To train the model on your dataset, run the main.py script with the IS_TRAINING = True flag:
+```
+python main.py
+```
+This will load the training dataset (Training_Dataset.h5), train the model for a specified number of epochs and batch size, and save the model checkpoints in the ./model/ directory.
+You can adjust the training parameters (batch size, number of epochs, logging intervals) inside the main.py file.
 
-├── Generator.py                # Generator model
-├── Discriminator.py             # Discriminator1 and Discriminator2 models
-├── LOSS.py                      # Loss functions (SSIM, L1, Frobenius)
-├── generate.py                  # Function for generating fused images
-├── train.py                     # Function for training the model
-├── Training_Dataset.h5          # Training dataset (not included)
-├── generated_images/            # Folder to save generated images
-├── model/                       # Folder to save model checkpoints
-├── README.md                    # Project documentation
-└── main.py                      # Main script to train or generate images
+Once the model is trained, you can generate fused images using the trained model. Set the IS_TRAINING = False flag in main.py and run:
+```
+python main.py
+```
+This will load the pre-trained model checkpoints from the ./model/ directory and generate fused images for the test set (e.g., VIS.bmp and IR.bmp images) located in the ./test_imgs/ directory.
+If you want to change the number of generated images or paths for the input images, modify the main.py script
+
