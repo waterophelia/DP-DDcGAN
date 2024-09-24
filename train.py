@@ -32,6 +32,22 @@ def compute_gradient(img):
     g = tf.nn.conv2d(img, kernel, strides=[1, 1, 1, 1], padding='SAME')
     return g
 
+# Function to apply noise to the input data
+def apply_noise(input_data, noise_type, epsilon, sensitivity=1):
+    if noise_type == 'laplace':
+        # Laplace noise
+        b = sensitivity / epsilon  # Calculate the scale for Laplace noise
+        noise = np.random.laplace(loc=0.0, scale=b, size=input_data.shape)
+    elif noise_type == 'gaussian':
+        # Gaussian noise
+        sigma = np.sqrt(sensitivity**2 / (2 * epsilon))  # Calculate the standard deviation for Gaussian noise
+        noise = np.random.normal(loc=0.0, scale=sigma, size=input_data.shape)
+    else:
+        raise ValueError("Unknown noise type. Choose 'laplace' or 'gaussian'.")
+    
+    noisy_input = input_data + noise
+    return noisy_input
+
 # Main training function
 def train(source_imgs, save_path, EPOCHES_set, BATCH_SIZE, logging_period=1, image_save_period=2, image_save_path='./generated_images'):
     start_time = datetime.now()
@@ -219,6 +235,10 @@ def train(source_imgs, save_path, EPOCHES_set, BATCH_SIZE, logging_period=1, ima
           # Convert to TensorFlow tensors
           VIS_batch = tf.convert_to_tensor(VIS_batch, dtype=tf.float32)
           ir_batch = tf.convert_to_tensor(ir_batch, dtype=tf.float32)
+
+          # Apply the same noise (Laplace or Gaussian) to both visible and infrared images
+          VIS_batch = apply_noise(VIS_batch, noise_type, epsilon)
+          ir_batch = apply_noise(ir_batch, noise_type, epsilon)
 
           it_g = 0
           it_d1 = 0
