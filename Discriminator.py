@@ -1,3 +1,6 @@
+# This code implements two discriminators (Discriminator1 and Discriminator2) for DDcGAN
+# These discriminators evaluate the generated images and apply convolutional layers with optional batch normalization
+
 import tensorflow as tf
 
 # Standard deviation for initializing weights in the convolutional layers
