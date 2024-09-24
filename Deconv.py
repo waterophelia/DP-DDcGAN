@@ -1,5 +1,5 @@
 # This code implements a custom DeconvLayer (deconvolution layer) 
-# It applies transposed convolution to increase spatial resolution.
+# It applies transposed convolution to increase spatial resolution
 
 import tensorflow as tf
 
