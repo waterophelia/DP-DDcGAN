@@ -166,42 +166,49 @@ def train(source_imgs, save_path, EPOCHES_set, BATCH_SIZE, logging_period=1, ima
         
         return D2_loss, D2_real, D2_fake
 
+    # Function for training the generator with respect to the GAN loss
     @tf.function
     def train_G_GAN(VIS_batch, ir_batch):
         with tf.GradientTape() as tape:
             generated_img = G(vis=VIS_batch, ir=ir_batch)
+            # Downsample the generated image twice
             g0 = tf.nn.avg_pool(generated_img, ksize=[1, 3, 3, 1], strides=[1, 2, 2, 1], padding='SAME')
             generated_img_ds = tf.nn.avg_pool(g0, ksize=[1, 3, 3, 1], strides=[1, 2, 2, 1], padding='SAME')
-            
+
+            # Feed the generated image to the discriminators D1 and D2
             D1_fake = D1(generated_img, training=True)
             D2_fake = D2(generated_img_ds, training=True)
 
+            # Compute the GAN loss for fooling D1 and D2
             G_loss_GAN_D1 = -tf.reduce_mean(tf.math.log(D1_fake + eps))
             G_loss_GAN_D2 = -tf.reduce_mean(tf.math.log(D2_fake + eps))
+             # Combine GAN losses from both discriminators
             G_loss_GAN = G_loss_GAN_D1 + G_loss_GAN_D2
 
+        # Compute gradients for generator based on the GAN loss
         gradients = tape.gradient(G_loss_GAN, G.trainable_variables)
+        # Clip gradients to avoid exploding gradients
         clipped_gradients = [tf.clip_by_value(grad, -8, 8) for grad in gradients]
         G_GAN_solver.apply_gradients(zip(clipped_gradients, G.trainable_variables))
         
         return G_loss_GAN
 
-    # ** Start Training **
+    # Start Training 
     step = 0
     count_loss = 0
     num_imgs = source_imgs.shape[0]
 
     for epoch in range(EPOCHS):
-        np.random.shuffle(source_imgs)
+        np.random.shuffle(source_imgs) # Shuffle the dataset at the beginning of each epoch
         for batch in range(n_batches):
           step += 1
           current_iter.assign(step)
 
-          # Extract and resize the batch
+           # Extract batches of visible and infrared images
           VIS_batch = source_imgs[batch * BATCH_SIZE:(batch * BATCH_SIZE + BATCH_SIZE), :, :, 0]
           ir_or_batch = source_imgs[batch * BATCH_SIZE:(batch * BATCH_SIZE + BATCH_SIZE), :, :, 1]
           
-          # Resizing both the visible and infrared patches to 84x84
+          # Resize both the visible and infrared patches to match the patch size
           VIS_batch = np.array([ndimage.zoom(vis_patch, (patch_size / vis_patch.shape[0], patch_size / vis_patch.shape[1])) for vis_patch in VIS_batch])
           ir_batch = np.array([ndimage.zoom(ir_patch, (patch_size / ir_patch.shape[0], patch_size / ir_patch.shape[1])) for ir_patch in ir_or_batch])
 
@@ -217,6 +224,7 @@ def train(source_imgs, save_path, EPOCHES_set, BATCH_SIZE, logging_period=1, ima
           it_d1 = 0
           it_d2 = 0
 
+          # Alternating training: Discriminators on even batches, Generator on odd batches
           if batch % 2 == 0:
                 d1_loss, d1_real, d1_fake = train_D1(VIS_batch, ir_batch)
                 it_d1 += 1
@@ -235,6 +243,7 @@ def train(source_imgs, save_path, EPOCHES_set, BATCH_SIZE, logging_period=1, ima
               if batch % image_save_period == 0:
                   save_generated_image(generated_img[0], epoch, batch, save_path)  # Save the first image in the batch
 
+          # Additional logic for re-training discriminators if losses exceed certain thresholds
           if batch % 2 == 0:
               while d1_loss > 1.9 and it_d1 < 20:
                   d1_loss, _, _ = train_D1(VIS_batch, ir_batch)
@@ -251,12 +260,14 @@ def train(source_imgs, save_path, EPOCHES_set, BATCH_SIZE, logging_period=1, ima
                   g_loss, _, _, _, _, _ = train_G(VIS_batch, ir_batch)
                   it_g += 1
 
+          # Logging the training process
           if batch % 1 == 0:
                 elapsed_time = datetime.now() - start_time
                 lr = learning_rate(current_iter)
                 print(f"Epoch {epoch + 1}/{EPOCHS}, Batch {batch}/{n_batches}, G_loss: {g_loss}, D1_loss: {d1_loss}, D2_loss: {d2_loss}")
                 print(f"Learning Rate: {lr}, Elapsed Time: {elapsed_time}\n")
 
+          # Save checkpoints periodically
           if step % logging_period == 0:
                 manager.save()
             
@@ -267,5 +278,6 @@ def train(source_imgs, save_path, EPOCHES_set, BATCH_SIZE, logging_period=1, ima
                 print('epoch:%d/%d, step:%d, lr:%s, elapsed_time:%s' % (
                     epoch + 1, EPOCHS, step, lr, elapsed_time))
 
+    # Save the model after training
     manager.save()
-print("Training completed for 10 batches.")
+print("Training completed.")
