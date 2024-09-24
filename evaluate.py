@@ -1,3 +1,6 @@
+# This code evaluates the quality of fused images generated from visible and infrared images using multiple metrics, 
+# such as SSIM, PSNR, entropy, spatial frequency, and correlation coefficients. It also calculates the inference time for each image.
+
 import numpy as np
 import time
 import os
@@ -9,40 +12,48 @@ from skimage.measure import shannon_entropy
 from skimage.transform import resize
 
 # Paths for results and test images
-results_dir = './generated_images/'  # Path to your generated images (should be .bmp)
-test_imgs_dir = './test_imgs/'  # Path to your test visible and infrared images (should be .bmp)
+results_dir = './generated_images/'  # Path to the generated images 
+test_imgs_dir = './test_imgs/'  # Path to the original (test) visible and infrared images
 
-# Helper function for reading images
+# Helper function to load and normalize an image
 def load_image(image_path):
     img = cv2.imread(image_path, cv2.IMREAD_GRAYSCALE)
-    return img / 255.0  # Normalize the image to [0, 1]
+    return img / 255.0  
 
 # Metric Functions
+
+# Calculate the Shannon entropy of an image
 def entropy(img):
     return shannon_entropy(img)
 
+# Calculate the mean gradient of an image, representing the sharpness of the image
 def mean_gradient(img):
     gx, gy = np.gradient(img)
     return np.mean(np.sqrt(gx**2 + gy**2))
 
+# Calculate the standard deviation of pixel intensities in an image
 def std_deviation(img):
     return np.std(img)
 
+# Calculate Peak Signal-to-Noise Ratio (PSNR) between two images
 def calculate_psnr(img1, img2):
     return psnr(img1, img2, data_range=1)
 
+# Calculate Structural Similarity Index (SSIM) between two images
 def calculate_ssim(img1, img2):
     return ssim(img1, img2, data_range=1)
 
+# Calculate the correlation coefficient between two images
 def calculate_correlation_coefficient(img1, img2):
     return np.corrcoef(img1.flatten(), img2.flatten())[0, 1]
 
+# Calculate the spatial frequency of an image, representing the texture complexity
 def calculate_spatial_frequency(image):
-    dx = np.diff(image, axis=1)
-    dy = np.diff(image, axis=0)
+    dx = np.diff(image, axis=1) # Horizontal gradient
+    dy = np.diff(image, axis=0) # Vertical gradient
     return np.sqrt(np.mean(dx**2) + np.mean(dy**2))
 
-# Function to evaluate a single pair of images
+# Function to evaluate a single set of fused, visible, and infrared images
 def evaluate_images(fused_img, vis_img, ir_img):
     metrics = {
         "Entropy": entropy(fused_img),
@@ -58,12 +69,13 @@ def evaluate_images(fused_img, vis_img, ir_img):
     }
     return metrics
 
-# Example of applying the metrics over multiple images
+# Function to evaluate metrics over multiple images in the dataset
 def evaluate_dataset(results_dir, test_imgs_dir):
+    # List all the result files (fused images) in the results directory
     result_files = sorted([f for f in os.listdir(results_dir) if f.endswith('.bmp')])  # Adjusted to .bmp
 
-    metrics_summary = []
-    inference_times = []
+    metrics_summary = []  # To store metrics for all images
+    inference_times = []  # To store inference times for all images
 
     for result_file in result_files:
         try:
@@ -94,6 +106,7 @@ def evaluate_dataset(results_dir, test_imgs_dir):
             print(f"Processed {result_file} successfully. Inference time: {inference_times[-1]:.4f} seconds")
         
         except Exception as e:
+            # Handle errors that occur during processing of a file
             print(f"Error processing {result_file}: {str(e)}")
 
     # Return all metrics and inference times
