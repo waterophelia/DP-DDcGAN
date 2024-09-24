@@ -1,3 +1,6 @@
+# This code implements three different loss functions: 
+# SSIM loss for image similarity, L1 loss, and Frobenius loss for evaluating image differences.
+
 import tensorflow as tf
 import numpy as np
 
