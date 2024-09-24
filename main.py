@@ -20,6 +20,8 @@ LOGGING = 40
 MODEL_SAVE_PATH = './model/' # Path where the trained model will be saved
 IMAGE_SAVE_PATH = './generated_images/' # Path where generated images will be saved
 IS_TRAINING = True # True for model training and False for generating
+noise_type = 'gaussian' # 'gaussian' or 'laplace'
+epsilon = 0.5 # DP guarantee
 
 def main():
     if IS_TRAINING:
@@ -32,7 +34,7 @@ def main():
             sources = f['data'][:]
 
         # Start training
-        train(sources, MODEL_SAVE_PATH, EPOCHS, BATCH_SIZE, logging_period=LOGGING, image_save_period=100, image_save_path=IMAGE_SAVE_PATH)
+        train(sources, MODEL_SAVE_PATH, EPOCHS, BATCH_SIZE, noise_type, epsilon, logging_period=LOGGING, image_save_period=100, image_save_path=IMAGE_SAVE_PATH)
 
     else:
         print('\nBegin to generate pictures ...\n')
