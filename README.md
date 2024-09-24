@@ -40,7 +40,8 @@ pip install tensorflow numpy h5py scipy matplotlib imageio opencv-python
 ```
 
 # Base Model Usage
-To train the model with no privacy guarantees on your dataset, run the main.py script with the IS_TRAINING = True flag:
+To train the model with no privacy guarantees on your dataset, comment out noise_type and epsilon in main.py from both hyperparameters and the training loop, similarly delete it from train.py in def train, and in train.py get rid of applying the noise to both batches.
+Then, run the main.py script with the IS_TRAINING = True flag:
 ```
 python main.py
 ```
