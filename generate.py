@@ -7,8 +7,28 @@ from os.path import join
 import tensorflow as tf
 from Generator import Generator
 
+noise_type = 'gaussian' # or 'laplace'
+epsilon = 1
+
+# Function to apply output noise to the generated images
+def apply_output_noise(generated_img, noise_type, epsilon, sensitivity=1):
+    if noise_type == 'laplace':
+        # Laplace noise
+        b = sensitivity / epsilon
+        noise = tf.random.laplace(tf.shape(generated_img), 0., b)
+    elif noise_type == 'gaussian':
+        # Gaussian noise
+        sigma = tf.sqrt(sensitivity**2 / (2 * epsilon))
+        noise = tf.random.normal(tf.shape(generated_img), 0., sigma)
+    else:
+        raise ValueError("Unknown noise type. Choose 'laplace' or 'gaussian'.")
+
+    # Add noise and ensure pixel values stay between 0 and 1
+    noisy_output = tf.clip_by_value(generated_img + noise, 0, 1)
+    return noisy_output
+
 # Function to generate the fused image from infrared and visible images using a pre-trained model
-def generate(ir_path, vis_path, model_path, index, output_path=None):
+def generate(ir_path, vis_path, model_path, index, noise_type, epsilon, output_path=None):
     # Load and preprocess images
     ir_img = imread(ir_path) / 255.0
     vis_img = imread(vis_path) / 255.0
@@ -44,8 +64,11 @@ def generate(ir_path, vis_path, model_path, index, output_path=None):
     # Run the model to generate fused images
     output_image = run_model(SOURCE_VIS, SOURCE_ir)
 
+    # Apply noise to the generated image
+    noisy_output_image = apply_output_noise(output_image, noise_type, epsilon)  
+
     # Convert the TensorFlow tensor to a NumPy array
-    output = output_image.numpy()
+    output = noisy_output_image.numpy()
     output = output[0, :, :, 0]  
 
     # Convert the output to uint8 format for saving as BMP
