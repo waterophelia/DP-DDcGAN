@@ -1,3 +1,5 @@
+# This code generates combined images for comparison. You need to have the images already generated in order to use it
+
 from PIL import Image, ImageOps, ImageDraw, ImageFont
 import os
 
@@ -14,11 +16,10 @@ subfolders = [
     ("Functional\nMechanism\nwith Gaussian\nε = 5", "functional-gaussian-5")
 ]
 
-# The specific image indices you want to pick from each folder
+# The specific image indices we want to pick from each folder
 image_indices = [2, 5, 8, 13, 15, 19]  # These correspond to the filenames
 image_filenames = [f"{index}.png" for index in image_indices]  # Create filenames like '2.bmp', '8.bmp', etc.
 
-# Find the smallest image size across all selected images
 min_width, min_height = float('inf'), float('inf')
 
 for label, folder in subfolders:
@@ -45,18 +46,18 @@ new_image_height = 6 * (min_height + row_padding)
 new_image = Image.new('RGB', (new_image_width, new_image_height), (255, 255, 255))
 
 # Provide the full path to the font file
-font_path = "/Library/Fonts/Times New Roman.ttf"  # Update this path based on where you find Arial.ttf
+font_path = "/Library/Fonts/Times New Roman.ttf"  
 # Font settings for the row labels
-font = ImageFont.truetype(font_path, 26)  # Use Arial from the specific path
+font = ImageFont.truetype(font_path, 26)  
 
 draw = ImageDraw.Draw(new_image)
 
 # Add row labels on the left side (subfolder names), with line breaks where needed
 for row, (label, folder) in enumerate(subfolders):
-    # Split label into lines (for multi-line labels)
+    # Split label into lines 
     lines = label.split("\n")
     
-    # Calculate total label height (sum of all line heights + small padding between lines)
+    # Calculate total label height 
     total_label_height = sum([draw.textbbox((0, 0), line, font=font)[3] for line in lines]) + ((len(lines) - 1) * 5)
     
     # Center the entire block of text vertically
@@ -65,7 +66,7 @@ for row, (label, folder) in enumerate(subfolders):
     # Draw each line of the label, centered horizontally
     for line in lines:
         bbox = draw.textbbox((0, 0), line, font=font)
-        label_x = (label_width // 2) - (bbox[2] // 2)  # Horizontally center the line
+        label_x = (label_width // 2) - (bbox[2] // 2)  
         draw.text((label_x, label_y), line, font=font, fill=(0, 0, 0))
         label_y += bbox[3] + 5  # Move to the next line position
 
