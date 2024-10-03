@@ -17,8 +17,8 @@ The following datasets are used in this project:
 ## Installation
 
 ```
-git clone https://github.com/yourusername/ddcgan-vis-ir.git
-cd ddcgan-vis-ir
+git clone https://github.com/waterophelia/DP-DDcGAN.git
+cd DP-DDcGAN
 ```
 ## Requirements
 
@@ -73,9 +73,13 @@ To enable output perturbation, adjust the following parameters in main.py:
 ```
 python main_input.py
 ```
+## Functional Mechanism
+To train the model with Functional Mechanism (either with Laplace or Gaussian noise), use main_functional.py and train_functional.py instead of the 
+
+## DP-SGD
 
 ## Evaluation
-Once you’ve trained the model or generated images with differential privacy, you can evaluate the results using the provided evaluation metrics (e.g., SSIM, PSNR, correlation coefficient). These metrics can be adjusted inside the evaluation script.
+Once you’ve trained the model or generated images with differential privacy, you can evaluate the results using the provided evaluation metrics. These metrics can be adjusted inside the evaluation script.
 ```
 python evaluate.py
 ```
