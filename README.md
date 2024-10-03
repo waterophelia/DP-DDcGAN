@@ -89,6 +89,8 @@ Once you’ve trained the model or generated images with differential privacy, y
 python evaluate.py
 ```
 
-You can also generate comparisons of the generated images and trade-off graphs with files combined_graphics.py and graphs.py.
-
+You can also generate comparisons of the generated images and privacy-utility trade-off graphs with files combined_graphics.py and graphs.py.
+```
+python graphs.py
+```
 
