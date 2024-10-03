@@ -63,7 +63,7 @@ To train the model with input perturbation on your dataset, run the main_input.p
 1. noise_type: Set to 'gaussian' or 'laplace' depending on the type of noise you want.
 2. epsilon: Set the privacy guarantee for the input data.
 ```
-python main_input.py
+python main.py
 ```
 
 ## Output Perturbation
@@ -71,13 +71,19 @@ To enable output perturbation, adjust the following parameters in main.py:
 1. noise_type: Set to 'gaussian' or 'laplace' depending on the type of noise you want.
 2. epsilon: Set the privacy guarantee, where lower values provide stronger privacy.
 ```
-python main_input.py
+python main.py
 ```
 ## Functional Mechanism
-To train the model with Functional Mechanism (either with Laplace or Gaussian noise), use main_functional.py and train_functional.py instead of the 
+To train the model with Functional Mechanism (either with Laplace or Gaussian noise), use main_functional.py and train_functional.py instead of the main.py and train.py.
+```
+python main_functional.py
+```
 
 ## DP-SGD
-
+To train the model with DP-SGD Mechanism with Moments Accountant, use main_dpsgd.py and train_sdpsgd.py instead of the main.py and train.py.
+```
+python main_dpsgd.py
+```
 ## Evaluation
 Once you’ve trained the model or generated images with differential privacy, you can evaluate the results using the provided evaluation metrics. These metrics can be adjusted inside the evaluation script.
 ```
