@@ -9,7 +9,8 @@ This repository contains the code for the paper ‘Fantastic Privacy Techniques 
 This implementation is based on the original [DDcGAN paper](https://ieeexplore.ieee.org/abstract/document/9031751).
 
 The following datasets are used in this project:
-- [Training_Dataset.h5](https://drive.google.com/file/d/1o-dhSphyyiqSHu9veiKWvxViZ_FSeZWJ/view?usp=share_link) - infrared and visible images from TNO Human Factors Dataset. 
+- [Training_Dataset.h5](https://drive.google.com/file/d/1o-dhSphyyiqSHu9veiKWvxViZ_FSeZWJ/view?usp=share_link) - infrared and visible images from TNO Human Factors Dataset.
+- [Medical_Dataset.h5](https://drive.google.com/file/d/1V2N9ujvqJkIUpzhOe3_TZqdQpICVi-m8/view?usp=sharing) - MRI and PET images from Harvard Medical School Whole Brain Atlas website.
 
 ## Installation
 
