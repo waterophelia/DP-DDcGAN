@@ -54,7 +54,7 @@ This will load the pre-trained model checkpoints from the ./model/ directory and
 If you want to change the number of generated images or paths for the input images, modify the main.py script
 
 # Differential Privacy Techniques
-Three main techniques for achieving data privacy have been implemented in this project: input perturbation, intermediate perturbation, and output perturbation.
+Three main techniques for achieving data privacy have been implemented in this project: input perturbation, intermediate perturbation, and output perturbation. For intermediate perturbation, Functional Mechanism and DP-SGD.
 
 ## Input Perturbation
 To train the model with input perturbation on your dataset, run the main_input.py script with:
